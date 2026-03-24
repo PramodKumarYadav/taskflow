@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: taskflow-mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: taskflow
+
+  server:
+    build:
+      context: .
+      dockerfile: packages/server/Dockerfile
+      target: dev
+    container_name: taskflow-server
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: local
+      PORT: 4000
+      MONGODB_URI: mongodb://mongo:27017/taskflow
+      JWT_SECRET: local-dev-secret-change-in-production
+      CLIENT_ORIGIN: http://localhost:5173
+    volumes:
+      - ./packages/server:/app/packages/server
+      - ./feature-flags:/app/feature-flags
+      - /app/node_modules
+    depends_on:
+      - mongo
+    command: npm run dev --workspace=packages/server
+
+  client:
+    build:
+      context: .
+      dockerfile: packages/client/Dockerfile
+      target: dev
+    container_name: taskflow-client
+    ports:
+      - '5173:5173'
+    environment:
+      VITE_API_URL: http://taskflow-server:4000
+    volumes:
+      - ./packages/client:/app/packages/client
+      - /app/node_modules
+    depends_on:
+      - server
+    command: npm run dev --workspace=packages/client -- --host
+
+volumes:
+  mongo-data:

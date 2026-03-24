@@ -1,0 +1,32 @@
+{
+  "name": "taskflow",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "feature-flags"
+  ],
+  "scripts": {
+    "dev": "docker-compose up --build",
+    "dev:local": "npm run build --workspace=feature-flags && concurrently --names 'server,client' --prefix-colors 'blue,green' 'npm run dev --workspace=packages/server' 'npm run dev --workspace=packages/client'",
+    "dev:server": "npm run build --workspace=feature-flags && npm run dev --workspace=packages/server",
+    "dev:client": "npm run dev --workspace=packages/client",
+    "lint": "eslint 'packages/*/src/**/*.{ts,tsx}' 'feature-flags/src/**/*.ts'",
+    "typecheck": "tsc -b packages/server packages/client feature-flags",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
