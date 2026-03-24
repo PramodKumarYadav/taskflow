@@ -1,0 +1,11 @@
+{
+    "TASK_LABELS": true,
+    "NOTIFICATIONS": true,
+    "TASK_PRIORITY": false,
+    "TASK_COMMENTS": false,
+    "CSV_EXPORT": false,
+    "DASHBOARD_ANALYTICS": false,
+    "COLLABORATION": false,
+    "DARK_MODE": false,
+    "AI_SUGGESTIONS": false
+}

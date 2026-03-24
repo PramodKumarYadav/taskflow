@@ -1,0 +1,9 @@
+{
+  "TASK_PRIORITY": true,
+  "TASK_COMMENTS": true,
+  "CSV_EXPORT": true,
+  "DASHBOARD_ANALYTICS": true,
+  "COLLABORATION": true,
+  "DARK_MODE": true,
+  "AI_SUGGESTIONS": true
+}
