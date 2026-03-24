@@ -1,0 +1,67 @@
+name: Deploy → Staging
+
+# Manual promotion. Specify the commit SHA to deploy.
+# Typical use: after QA in dev signs off, engineer manually runs this workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit SHA to deploy (defaults to HEAD of main)
+        required: false
+        default: ''
+
+jobs:
+  checkout-sha:
+    name: Resolve SHA
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha || github.ref }}
+      - id: resolve
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+  deploy-staging:
+    needs: checkout-sha
+    name: Deploy to Staging
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: staging
+      node_env: staging
+    secrets:
+      RENDER_SERVER_DEPLOY_HOOK: ${{ secrets.RENDER_STAGING_SERVER_HOOK }}
+      RENDER_CLIENT_DEPLOY_HOOK: ${{ secrets.RENDER_STAGING_CLIENT_HOOK }}
+      MONGODB_URI: ${{ secrets.STAGING_MONGODB_URI }}
+      JWT_SECRET: ${{ secrets.STAGING_JWT_SECRET }}
+
+  notify-pr:
+    needs: [checkout-sha, deploy-staging]
+    name: Comment on PR
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = '${{ needs.checkout-sha.outputs.sha }}';
+            const status = '${{ needs.deploy-staging.result }}';
+            const emoji = status === 'success' ? '✅' : '❌';
+            const body = `${emoji} **Staging deploy** ${status} for \`${sha.slice(0,7)}\`\n\nEnvironment: staging | [View app](${{ vars.APP_URL }})`;
+
+            // Find the PR associated with this SHA
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: sha,
+            });
+
+            for (const pr of prs.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body,
+              });
+            }

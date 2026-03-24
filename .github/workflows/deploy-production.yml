@@ -1,0 +1,92 @@
+name: Deploy → Production
+
+# Manual promotion with a required reviewer approval gate.
+#
+# Setup: GitHub → Settings → Environments → "production"
+#   - Add required reviewers
+#   - (Optional) Add protection rules: only allow deploys from main branch
+#
+# This workflow will pause at the "Deploy to Production" job and wait for
+# approval before proceeding.
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit SHA to deploy (must already be in staging)
+        required: false
+        default: ''
+      release_notes:
+        description: Short release notes (used for the GitHub Release)
+        required: false
+        default: ''
+
+jobs:
+  checkout-sha:
+    name: Resolve SHA
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+      short_sha: ${{ steps.resolve.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha || github.ref }}
+          fetch-depth: 0
+      - id: resolve
+        run: |
+          SHA=$(git rev-parse HEAD)
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHA:0:7}" >> $GITHUB_OUTPUT
+
+  deploy-production:
+    needs: checkout-sha
+    name: Deploy to Production
+    # ← This references the GitHub Environment "production".
+    # GitHub will pause here and require reviewer approval before continuing.
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: production
+      node_env: production
+    secrets:
+      RENDER_SERVER_DEPLOY_HOOK: ${{ secrets.RENDER_PROD_SERVER_HOOK }}
+      RENDER_CLIENT_DEPLOY_HOOK: ${{ secrets.RENDER_PROD_CLIENT_HOOK }}
+      MONGODB_URI: ${{ secrets.PROD_MONGODB_URI }}
+      JWT_SECRET: ${{ secrets.PROD_JWT_SECRET }}
+
+  create-release:
+    needs: [checkout-sha, deploy-production]
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    if: success()
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.checkout-sha.outputs.sha }}
+
+      - name: Generate tag name
+        id: tag
+        run: |
+          TAG="v$(date +'%Y.%m.%d')-${{ needs.checkout-sha.outputs.short_sha }}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = '${{ needs.checkout-sha.outputs.sha }}';
+            const tag = '${{ steps.tag.outputs.tag }}';
+            const notes = `${{ inputs.release_notes }}` || `Production deploy of ${sha.slice(0,7)}`;
+
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              target_commitish: sha,
+              name: tag,
+              body: notes,
+              draft: false,
+              prerelease: false,
+            });
+            console.log(`Release ${tag} created.`);
