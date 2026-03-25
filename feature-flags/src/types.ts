@@ -3,7 +3,8 @@
  *
  * To add a new flag:
  *  1. Add its name to this union type.
- *  2. Add the flag (true/false) to each flags.*.json config file.
+ *  2. Add a full FlagDefinition entry to flags.default.json.
+ *  3. Add { "enabled": true/false } overrides to the relevant env files.
  *
  * That's it — no other files need to change.
  */
@@ -18,7 +19,35 @@ export type FlagName =
   | 'DARK_MODE'
   | 'AI_SUGGESTIONS';
 
-/** Shape of a complete flags config object (all flags must be specified). */
+/** Lifecycle stage of a feature flag. */
+export type FlagStage = 'development' | 'staging' | 'production' | 'stable';
+
+/**
+ * Full metadata + current value for a single feature flag.
+ * Only lives in flags.default.json — env override files only need { enabled }.
+ */
+export interface FlagDefinition {
+  /** Whether the flag is on by default (overridden per env). */
+  enabled: boolean;
+  /** Human-readable description of what this flag controls. */
+  description: string;
+  /** Team or person responsible for this flag. */
+  owner: string;
+  /** ISO date (YYYY-MM-DD) when the flag was introduced. */
+  createdAt: string;
+  /** ISO date (YYYY-MM-DD) by which the flag should be promoted to stable or removed. */
+  expiresAt?: string;
+  /** Current position in the flag lifecycle. */
+  stage: FlagStage;
+}
+
+/** Shape of flags.default.json — all flags must have a full definition. */
+export type FlagRegistry = Record<FlagName, FlagDefinition>;
+
+/** Shape of env override files — only the flags that differ need to be listed. */
+export type FlagOverrides = Partial<Record<FlagName, { enabled: boolean }>>;
+
+/** Public API shape returned to consumers (routes, React hooks). */
 export type FlagConfig = Record<FlagName, boolean>;
 
 /**

@@ -1,11 +1,72 @@
 {
-    "TASK_LABELS": true,
-    "NOTIFICATIONS": true,
-    "TASK_PRIORITY": false,
-    "TASK_COMMENTS": false,
-    "CSV_EXPORT": false,
-    "DASHBOARD_ANALYTICS": false,
-    "COLLABORATION": false,
-    "DARK_MODE": false,
-    "AI_SUGGESTIONS": false
+    "TASK_LABELS": {
+        "enabled": true,
+        "description": "Show colour-coded labels on task cards for categorisation",
+        "owner": "frontend-team",
+        "createdAt": "2026-01-10",
+        "stage": "stable"
+    },
+    "NOTIFICATIONS": {
+        "enabled": true,
+        "description": "Show the notification bell in the navbar",
+        "owner": "frontend-team",
+        "createdAt": "2026-01-10",
+        "stage": "stable"
+    },
+    "TASK_PRIORITY": {
+        "enabled": false,
+        "description": "Allow setting low/medium/high priority on tasks and show priority badge",
+        "owner": "backend-team",
+        "createdAt": "2026-02-14",
+        "expiresAt": "2026-06-25",
+        "stage": "staging"
+    },
+    "TASK_COMMENTS": {
+        "enabled": false,
+        "description": "Allow users to add and view threaded comments on tasks",
+        "owner": "backend-team",
+        "createdAt": "2026-02-14",
+        "expiresAt": "2026-06-25",
+        "stage": "staging"
+    },
+    "CSV_EXPORT": {
+        "enabled": false,
+        "description": "Export task list as a downloadable CSV file",
+        "owner": "backend-team",
+        "createdAt": "2026-03-01",
+        "expiresAt": "2026-06-25",
+        "stage": "development"
+    },
+    "DASHBOARD_ANALYTICS": {
+        "enabled": false,
+        "description": "Show the analytics dashboard page with task completion metrics",
+        "owner": "frontend-team",
+        "createdAt": "2026-03-01",
+        "expiresAt": "2026-06-25",
+        "stage": "development"
+    },
+    "COLLABORATION": {
+        "enabled": false,
+        "description": "Allow task owners to share tasks with other users",
+        "owner": "backend-team",
+        "createdAt": "2026-03-01",
+        "expiresAt": "2026-06-25",
+        "stage": "development"
+    },
+    "DARK_MODE": {
+        "enabled": false,
+        "description": "Enable dark mode toggle in the navbar",
+        "owner": "frontend-team",
+        "createdAt": "2026-03-15",
+        "expiresAt": "2026-06-25",
+        "stage": "development"
+    },
+    "AI_SUGGESTIONS": {
+        "enabled": false,
+        "description": "Show AI-powered task suggestions based on user history",
+        "owner": "ml-team",
+        "createdAt": "2026-03-15",
+        "expiresAt": "2026-06-25",
+        "stage": "development"
+    }
 }

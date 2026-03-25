@@ -1,7 +1,17 @@
 {
-  "TASK_PRIORITY": true,
-  "TASK_COMMENTS": true,
-  "CSV_EXPORT": true,
-  "DASHBOARD_ANALYTICS": true,
-  "COLLABORATION": true
+  "TASK_PRIORITY": {
+    "enabled": true
+  },
+  "TASK_COMMENTS": {
+    "enabled": true
+  },
+  "CSV_EXPORT": {
+    "enabled": true
+  },
+  "DASHBOARD_ANALYTICS": {
+    "enabled": true
+  },
+  "COLLABORATION": {
+    "enabled": true
+  }
 }

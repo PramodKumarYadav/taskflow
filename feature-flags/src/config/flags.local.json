@@ -1,9 +1,23 @@
 {
-  "TASK_PRIORITY": true,
-  "TASK_COMMENTS": true,
-  "CSV_EXPORT": true,
-  "DASHBOARD_ANALYTICS": true,
-  "COLLABORATION": true,
-  "DARK_MODE": true,
-  "AI_SUGGESTIONS": true
+  "TASK_PRIORITY": {
+    "enabled": true
+  },
+  "TASK_COMMENTS": {
+    "enabled": true
+  },
+  "CSV_EXPORT": {
+    "enabled": true
+  },
+  "DASHBOARD_ANALYTICS": {
+    "enabled": true
+  },
+  "COLLABORATION": {
+    "enabled": true
+  },
+  "DARK_MODE": {
+    "enabled": true
+  },
+  "AI_SUGGESTIONS": {
+    "enabled": true
+  }
 }
