@@ -34,7 +34,7 @@ export function CollaborationPanel({ task, onClose }: Props) {
           <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
         </div>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          Share "<strong>{task.title}</strong>" with another TaskFlow user.
+          Share &ldquo;<strong>{task.title}</strong>&rdquo; with another TaskFlow user.
         </p>
 
         {status && (

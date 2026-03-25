@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc && cp -r src/config dist/config",
+    "build": "tsc && rm -rf dist/config && cp -r src/config dist/config",
     "dev": "tsc --watch"
   },
   "devDependencies": {
