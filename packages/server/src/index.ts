@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import 'dotenv-vault/config';
 import { createApp, connectDB } from './app';
 
 const PORT = parseInt(process.env.PORT ?? '4000', 10);

@@ -16,6 +16,9 @@ COPY packages/client ./packages/client
 RUN npm run build --workspace=packages/client
 
 FROM nginx:alpine AS production
+RUN apk add --no-cache gettext
 COPY --from=builder /app/packages/client/dist /usr/share/nginx/html
-COPY packages/client/nginx.conf /etc/nginx/conf.d/default.conf
+COPY packages/client/nginx.conf /etc/nginx/conf.d/default.conf.template
 EXPOSE 80
+# At startup, substitute only ${BACKEND_URL} (leaves nginx $vars like $uri untouched)
+CMD ["/bin/sh", "-c", "envsubst '${BACKEND_URL}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
