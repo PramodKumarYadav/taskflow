@@ -12,3 +12,8 @@ build/
 *.log
 .DS_Store
 coverage/
+
+.env*
+.flaskenv*
+!.env.project
+!.env.vault

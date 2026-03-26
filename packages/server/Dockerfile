@@ -24,6 +24,7 @@ FROM node:20-alpine AS production
 WORKDIR /app
 COPY --from=builder /app/packages/server/dist ./dist
 COPY --from=builder /app/feature-flags/dist ./feature-flags/dist
+COPY --from=builder /app/packages/server/.env.vault ./.env.vault
 COPY packages/server/package*.json .
 RUN npm install --omit=dev
 EXPOSE 4000
