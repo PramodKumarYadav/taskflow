@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       sha:
-        description: Commit SHA to deploy (must already be in staging)
+        description: Commit SHA to deploy (must already be verified in staging)
         required: false
         default: ''
       release_notes:
@@ -46,12 +46,10 @@ jobs:
     uses: ./.github/workflows/_deploy.yml
     with:
       environment: production
-      node_env: production
+      railway_env: production
     secrets:
-      RENDER_SERVER_DEPLOY_HOOK: ${{ secrets.RENDER_PROD_SERVER_HOOK }}
-      RENDER_CLIENT_DEPLOY_HOOK: ${{ secrets.RENDER_PROD_CLIENT_HOOK }}
-      MONGODB_URI: ${{ secrets.PROD_MONGODB_URI }}
-      JWT_SECRET: ${{ secrets.PROD_JWT_SECRET }}
+      # Set in GitHub → Settings → Environments → production → Secrets
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
   create-release:
     needs: [checkout-sha, deploy-production]
