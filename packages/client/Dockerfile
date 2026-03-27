@@ -20,5 +20,5 @@ RUN apk add --no-cache gettext
 COPY --from=builder /app/packages/client/dist /usr/share/nginx/html
 COPY packages/client/nginx.conf /etc/nginx/conf.d/default.conf.template
 EXPOSE 80
-# At startup, detect DNS resolver from /etc/resolv.conf and substitute ${BACKEND_URL} and ${RESOLVER}
-CMD ["/bin/sh", "-c", "export RESOLVER=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf) && envsubst '${BACKEND_URL} ${RESOLVER}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# At startup, detect DNS resolver from /etc/resolv.conf, wrap IPv6 in brackets, substitute vars
+CMD ["/bin/sh", "-c", "NS=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf) && case $NS in *:*) RESOLVER=\"[$NS]\";; *) RESOLVER=\"$NS\";; esac && export RESOLVER && envsubst '${BACKEND_URL} ${RESOLVER}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
