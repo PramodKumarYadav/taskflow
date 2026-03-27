@@ -3,27 +3,25 @@ name: Deploy (reusable)
 # This reusable workflow is the single source of deploy logic.
 # All environment-specific deploy workflows call this one.
 #
-# To use a different hosting provider, only update this file.
+# Hosting: Railway
+# Secrets: managed by dotenv-vault — only RAILWAY_TOKEN is required here.
+#
+# To switch hosting providers, only update this file.
 
 on:
   workflow_call:
     inputs:
       environment:
-        description: Target environment (dev | staging | production)
+        description: GitHub environment name (dev | staging | production)
         required: true
         type: string
-      node_env:
-        description: NODE_ENV value for the server build
+      railway_env:
+        description: Railway environment name to deploy into (dev | staging | production)
         required: true
         type: string
     secrets:
-      RENDER_SERVER_DEPLOY_HOOK:
-        required: true
-      RENDER_CLIENT_DEPLOY_HOOK:
-        required: true
-      MONGODB_URI:
-        required: true
-      JWT_SECRET:
+      RAILWAY_TOKEN:
+        description: Railway project token (Settings → Tokens in Railway dashboard)
         required: true
 
 jobs:
@@ -36,45 +34,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
+      # Railway builds the Docker image itself via the Dockerfile.
+      # No local build step is needed — we just trigger the deploy.
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build feature-flags
-        run: npm run build --workspace=feature-flags
-
-      - name: Build server
-        run: npm run build --workspace=packages/server
+      - name: Deploy server to Railway
         env:
-          NODE_ENV: ${{ inputs.node_env }}
-
-      - name: Build client
-        run: npm run build --workspace=packages/client
-        env:
-          VITE_API_URL: ${{ vars.API_URL }}
-
-      - name: Deploy server to Render
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          echo "Triggering Render server deploy for ${{ inputs.environment }}..."
-          curl -fsS --retry 3 -X POST "${{ secrets.RENDER_SERVER_DEPLOY_HOOK }}"
+          echo "Triggering Railway deploy for taskflow-server → ${{ inputs.railway_env }}..."
+          npx --yes @railway/cli@latest up \
+            --service taskflow-server \
+            --environment ${{ inputs.railway_env }} \
+            --detach
           echo "Server deploy triggered."
 
-      - name: Deploy client to Render
+      - name: Deploy client to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          echo "Triggering Render client deploy for ${{ inputs.environment }}..."
-          curl -fsS --retry 3 -X POST "${{ secrets.RENDER_CLIENT_DEPLOY_HOOK }}"
+          echo "Triggering Railway deploy for taskflow-client → ${{ inputs.railway_env }}..."
+          npx --yes @railway/cli@latest up \
+            --service taskflow-client \
+            --environment ${{ inputs.railway_env }} \
+            --detach
           echo "Client deploy triggered."
 
       - name: Health check (server)
         run: |
-          echo "Waiting 30 seconds for deploy to propagate..."
-          sleep 30
-          STATUS=$(curl -fsS -o /dev/null -w "%{http_code}" "${{ vars.API_URL }}/health" || echo "000")
+          echo "Waiting 90 seconds for Railway to build and start the container..."
+          sleep 90
+          STATUS=$(curl -fsS -o /dev/null -w "%{http_code}" "${{ vars.SERVER_URL }}/health" || echo "000")
           echo "Health check status: $STATUS"
           if [ "$STATUS" != "200" ]; then
             echo "⚠️  Health check returned $STATUS — deploy may still be in progress."
@@ -89,7 +78,7 @@ jobs:
           echo "| | |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| **Environment** | ${{ inputs.environment }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **NODE_ENV** | ${{ inputs.node_env }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Railway env** | ${{ inputs.railway_env }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit** | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
           echo "| **Triggered by** | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| **App URL** | ${{ vars.APP_URL }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Client URL** | ${{ vars.CLIENT_URL }} |" >> $GITHUB_STEP_SUMMARY

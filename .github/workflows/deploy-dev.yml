@@ -1,6 +1,7 @@
 name: Deploy → Dev
 
-# Fires automatically on every merge to main (trunk-based delivery)
+# Fires automatically on every merge to main (trunk-based delivery).
+# Deploys to the Railway "dev" environment.
 on:
   push:
     branches: [main]
@@ -11,12 +12,7 @@ jobs:
     uses: ./.github/workflows/_deploy.yml
     with:
       environment: dev
-      node_env: development
+      railway_env: dev
     secrets:
-      # Set these in GitHub → Settings → Secrets → Actions
-      # RENDER_SERVER_DEPLOY_HOOK: your Render server deploy hook URL
-      # RENDER_CLIENT_DEPLOY_HOOK: your Render client deploy hook URL
-      RENDER_SERVER_DEPLOY_HOOK: ${{ secrets.RENDER_DEV_SERVER_HOOK }}
-      RENDER_CLIENT_DEPLOY_HOOK: ${{ secrets.RENDER_DEV_CLIENT_HOOK }}
-      MONGODB_URI: ${{ secrets.DEV_MONGODB_URI }}
-      JWT_SECRET: ${{ secrets.DEV_JWT_SECRET }}
+      # Set in GitHub → Settings → Environments → dev → Secrets
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
