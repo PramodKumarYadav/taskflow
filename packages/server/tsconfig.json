@@ -2,9 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "paths": {
-      "@taskflow/feature-flags": ["../../feature-flags/src/index.ts"]
-    }
+    "rootDir": "src"
   },
-  "include": ["src", "../../feature-flags/src"]
+  "include": ["src"]
 }
