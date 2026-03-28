@@ -1,5 +1,8 @@
 # TaskFlow
 
+[![Staging](https://img.shields.io/badge/staging-live-blue?style=flat-square)](https://taskflow-client-staging-staging.up.railway.app/)
+[![Production](https://img.shields.io/badge/production-live-brightgreen?style=flat-square)](https://taskflow-client-production-8f52.up.railway.app/)
+
 A full-stack task management app built to demo **trunk-based development with feature toggles**.
 
 **Stack**: React + TypeScript (Vite) · Express + TypeScript · MongoDB · npm workspaces monorepo
