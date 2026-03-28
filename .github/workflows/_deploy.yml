@@ -72,7 +72,7 @@ jobs:
           echo "Waiting 60 seconds for Railway to build and start the container..."
           sleep 60
           DEADLINE=$(( $(date +%s) + 180 ))  # poll for up to 3 more minutes (4 min total)
-          INTERVAL=15
+          INTERVAL=5
           while true; do
             STATUS=$(curl -fsS -o /dev/null -w "%{http_code}" "${{ vars.SERVER_URL }}/health" || echo "000")
             echo "Health check status: $STATUS ($(( DEADLINE - $(date +%s) ))s remaining)"
