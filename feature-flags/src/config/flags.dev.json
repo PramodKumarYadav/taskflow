@@ -13,5 +13,11 @@
   },
   "COLLABORATION": {
     "enabled": true
+  },
+  "DARK_MODE": {
+    "enabled": true
+  },
+  "AI_SUGGESTIONS": {
+    "enabled": true
   }
 }

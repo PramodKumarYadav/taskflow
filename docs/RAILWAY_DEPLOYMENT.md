@@ -44,7 +44,7 @@ The client is a static React app served by nginx, which proxies `/api` requests 
 
 ## Step 2 — Understand Secret Management (dotenv-vault)
 
-The server uses [dotenv-vault](https://dotenv.org/env-vault) to manage secrets. All environment variables — including `MONGODB_URI`, `JWT_SECRET`, `PORT`, and `NODE_ENV` — are stored **encrypted** in `.env.vault`, which is committed to the repo and baked into the production Docker image.
+The server uses [dotenv-vault](https://dotenv.org/env-vault) to manage secrets. All environment variables — including `MONGODB_URI`, `JWT_SECRET`, `PORT`, and `NODE_ENV` — are stored __encrypted__ in `.env.vault`, which is committed to the repo and baked into the production Docker image.
 
 At runtime, the server decrypts the vault using a single key you provide:
 
@@ -93,8 +93,8 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 
 ### Networking (Settings → Networking)
 
-- Click **Generate Domain** to give the server a public URL (used for `CLIENT_ORIGIN` above and for external API testing)
-- Note the **Private Networking** hostname shown — it will be `taskflow.railway.internal` (or the short alias `taskflow`)
+- Click **Generate Domain** to give the server its public URL (needed for health checks and external API testing)
+- Note the __Private Networking__ hostname shown — it will be `taskflow.railway.internal`. This is what the client uses to reach the server internally via `BACKEND_URL`
 
 ---
 
@@ -110,16 +110,19 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 
 ### Environment variables (Variables tab)
 
+![alt text](image.png)
+
 | Variable | Value |
 |---|---|
-| `BACKEND_URL` | `http://taskflow.railway.internal:4000` |
+| `BACKEND_URL` | `http://taskflow-server-replace-with-env-name.railway.internal:4000` |
 
-> **Important:** Use the private networking hostname (`taskflow.railway.internal`), not the public URL. This keeps traffic inside Railway's network and avoids latency and egress costs.
+> __Important:__ Use the private networking hostname (`taskflow.railway.internal`), not the public URL. This keeps traffic inside Railway's network and avoids latency and egress costs.
 > The nginx startup script reads the container's DNS resolver automatically and substitutes `BACKEND_URL` at runtime — no rebuild is needed when this value changes.
 
 ### Networking (Settings → Networking)
 
 - Click **Generate Domain** to give the client its public URL
+- Once generated, __go back to the server service Variables__ and set `CLIENT_ORIGIN` to this URL (needed for CORS)
 
 ---
 
@@ -128,10 +131,11 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 Trigger a deploy on both services manually from the Railway dashboard. Railway will:
 
 1. Build the Docker image from the repo root using the specified Dockerfile
-2. For the **client**: nginx starts, reads `/etc/resolv.conf` for the DNS resolver, substitutes `$BACKEND_URL` into the nginx config, then serves the app
-3. For the **server**: dotenv-vault decrypts `.env.vault` using `DOTENV_KEY`, injects all secrets, connects to MongoDB, and listens on port 4000
+2. For the __client__: nginx starts, reads `/etc/resolv.conf` for the DNS resolver, substitutes `$BACKEND_URL` into the nginx config, then serves the app
+3. For the __server__: dotenv-vault decrypts `.env.vault` using `DOTENV_KEY`, injects all secrets, connects to MongoDB, and listens on port 4000
 
 Verify by visiting the client's public URL and checking:
+
 - The app loads (`/`)
 - `GET <client-url>/api/flags` returns a JSON response (proxied through nginx to the server)
 
@@ -208,9 +212,9 @@ For each environment, add the following under **Variables**:
 
 nginx can't reach the server. Check in order:
 
-1. **Wrong hostname** — Go to the server service → Settings → Networking and confirm the private hostname. Set `BACKEND_URL` on the client to `http://<private-hostname>:4000`
+1. __Wrong hostname__ — Go to the server service → Settings → Networking and confirm the private hostname. Set `BACKEND_URL` on the client to `http://<private-hostname>:4000`
 2. **Different Railway environments** — Private networking only works between services in the **same environment**. Ensure both client and server are deployed in the same Railway environment
-3. **Server not running** — Check the server's Deploy Logs for startup errors (bad `DOTENV_KEY`, MongoDB connection failure, etc.)
+3. __Server not running__ — Check the server's Deploy Logs for startup errors (bad `DOTENV_KEY`, MongoDB connection failure, etc.)
 
 ### `host not found in upstream` on nginx startup
 

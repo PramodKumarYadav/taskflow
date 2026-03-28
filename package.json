@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "docker-compose up --build",
     "dev:local": "npm run build --workspace=feature-flags && concurrently --names 'server,client' --prefix-colors 'blue,green' 'npm run dev --workspace=packages/server' 'npm run dev --workspace=packages/client'",
+    "dev:ci": "NODE_ENV=ci npm run build --workspace=feature-flags && NODE_ENV=ci concurrently --names 'server,client' --prefix-colors 'blue,green' 'npm run dev --workspace=packages/server' 'npm run dev --workspace=packages/client'",
     "dev:server": "npm run build --workspace=feature-flags && npm run dev --workspace=packages/server",
     "dev:client": "npm run dev --workspace=packages/client",
     "lint": "eslint 'packages/*/src/**/*.{ts,tsx}' 'feature-flags/src/**/*.ts'",
