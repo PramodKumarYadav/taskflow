@@ -88,8 +88,9 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 |---|---|
 | `DOTENV_KEY` | Decryption key from `npx dotenv-vault@latest keys <env>` |
 | `CLIENT_ORIGIN` | The public Railway URL of the client service, e.g. `https://taskflow-client-production-xxxx.up.railway.app` |
+| `PORT` | `4000` |
 
-> `DOTENV_KEY` unlocks the vault and injects all other secrets automatically (`MONGODB_URI`, `JWT_SECRET`, `PORT`, `NODE_ENV`). `CLIENT_ORIGIN` is set separately because it depends on the Railway-assigned client domain, which is not known at vault-build time.
+> `DOTENV_KEY` unlocks the vault and injects all other secrets automatically (`MONGODB_URI`, `JWT_SECRET`, `NODE_ENV`). `CLIENT_ORIGIN` is set separately because it depends on the Railway-assigned client domain, which is not known at vault-build time. `PORT` must also be set explicitly — Railway's HTTP proxy reads `PORT` directly to route traffic to the container, and it cannot see values injected by dotenv-vault at boot time. Without it, Railway defaults to port 80 and the server (listening on 4000) returns 502.
 
 ### Networking (Settings → Networking)
 
