@@ -69,8 +69,8 @@ jobs:
 
       - name: Health check (server)
         run: |
-          echo "Waiting 60 seconds for Railway to build and start the container..."
-          sleep 60
+          echo "Waiting 15 seconds for Railway to build and start the container..."
+          sleep 15
           DEADLINE=$(( $(date +%s) + 180 ))  # poll for up to 3 more minutes (4 min total)
           INTERVAL=5
           while true; do
