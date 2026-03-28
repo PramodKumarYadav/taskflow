@@ -1,18 +1,18 @@
-name: Deploy → Dev
+name: Deploy → ci
 
 # Fires automatically on every merge to main (trunk-based delivery).
-# Deploys to the Railway "dev" environment.
+# Deploys to the Railway "ci" environment.
 on:
   push:
     branches: [main]
 
 jobs:
   deploy-dev:
-    name: Deploy to Dev
+    name: Deploy to ci
     uses: ./.github/workflows/_deploy.yml
     with:
       environment: ci
       railway_env: ci
     secrets:
-      # Set in GitHub → Settings → Environments → dev → Secrets
+      # Set in GitHub → Settings → Environments → ci → Secrets
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
