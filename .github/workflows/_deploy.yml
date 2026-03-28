@@ -19,6 +19,11 @@ on:
         description: Railway environment name to deploy into (dev | staging | production)
         required: true
         type: string
+      sha:
+        description: Full commit SHA to deploy (defaults to HEAD of the triggering branch)
+        required: false
+        type: string
+        default: ''
     secrets:
       RAILWAY_TOKEN:
         description: Railway project token (Settings → Tokens in Railway dashboard)
@@ -33,6 +38,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.sha || github.ref }}
+          fetch-depth: 0
 
       # Railway builds the Docker image itself via the Dockerfile.
       # No local build step is needed — we just trigger the deploy.
