@@ -19,9 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.sha || github.ref }}
+          ref: ${{ github.ref }}
+          fetch-depth: 0
       - id: resolve
-        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        run: |
+          if [ -n "${{ inputs.sha }}" ]; then
+            git checkout ${{ inputs.sha }}
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
   deploy-staging:
     needs: checkout-sha
@@ -30,6 +35,7 @@ jobs:
     with:
       environment: staging
       railway_env: staging
+      sha: ${{ needs.checkout-sha.outputs.sha }}
     secrets:
       # Set in GitHub → Settings → Environments → staging → Secrets
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
