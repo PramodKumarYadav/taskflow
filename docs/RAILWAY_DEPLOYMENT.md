@@ -119,7 +119,8 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 
 > __Important:__ Use the private networking hostname (`taskflow.railway.internal`), not the public URL. This keeps traffic inside Railway's network and avoids latency and egress costs.
 > The nginx startup script reads the container's DNS resolver automatically and substitutes `BACKEND_URL` at runtime — no rebuild is needed when this value changes.
-> **`PORT` must be set to `80`** — Railway uses the `PORT` variable to determine which port the container listens on. The client (nginx) listens on port 80, so without this Railway cannot route incoming traffic to the service correctly.
+> __`PORT` must be set to `80`__ — Railway uses the `PORT` variable to determine which port the container listens on. The client (nginx) listens on port 80, so without this Railway cannot route incoming traffic to the service correctly.
+
 ### Networking (Settings → Networking)
 
 - Click **Generate Domain** to give the client its public URL
