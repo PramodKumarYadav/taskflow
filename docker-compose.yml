@@ -20,7 +20,7 @@ services:
     ports:
       - '4000:4000'
     environment:
-      NODE_ENV: local
+      NODE_ENV: development
       PORT: 4000
       MONGODB_URI: mongodb://mongo:27017/taskflow
       JWT_SECRET: local-dev-secret-change-in-production
