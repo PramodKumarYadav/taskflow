@@ -11,8 +11,8 @@ jobs:
     name: Deploy to Dev
     uses: ./.github/workflows/_deploy.yml
     with:
-      environment: dev
-      railway_env: development
+      environment: ci
+      railway_env: ci
     secrets:
       # Set in GitHub → Settings → Environments → dev → Secrets
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
