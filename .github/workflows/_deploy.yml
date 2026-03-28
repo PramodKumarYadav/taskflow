@@ -49,9 +49,9 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          echo "Triggering Railway deploy for taskflow-server → ${{ inputs.railway_env }}..."
+          echo "Triggering Railway deploy for taskflow-server-${{ inputs.railway_env }} → ${{ inputs.railway_env }}..."
           npx --yes @railway/cli@latest up \
-            --service taskflow-server \
+            --service taskflow-server-${{ inputs.railway_env }} \
             --environment ${{ inputs.railway_env }} \
             --detach
           echo "Server deploy triggered."
@@ -60,24 +60,32 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          echo "Triggering Railway deploy for taskflow-client → ${{ inputs.railway_env }}..."
+          echo "Triggering Railway deploy for taskflow-client-${{ inputs.railway_env }} → ${{ inputs.railway_env }}..."
           npx --yes @railway/cli@latest up \
-            --service taskflow-client \
+            --service taskflow-client-${{ inputs.railway_env }} \
             --environment ${{ inputs.railway_env }} \
             --detach
           echo "Client deploy triggered."
 
       - name: Health check (server)
         run: |
-          echo "Waiting 90 seconds for Railway to build and start the container..."
-          sleep 90
-          STATUS=$(curl -fsS -o /dev/null -w "%{http_code}" "${{ vars.SERVER_URL }}/health" || echo "000")
-          echo "Health check status: $STATUS"
-          if [ "$STATUS" != "200" ]; then
-            echo "⚠️  Health check returned $STATUS — deploy may still be in progress."
-          else
-            echo "✅ Health check passed."
-          fi
+          echo "Waiting 60 seconds for Railway to build and start the container..."
+          sleep 60
+          DEADLINE=$(( $(date +%s) + 180 ))  # poll for up to 3 more minutes (4 min total)
+          INTERVAL=15
+          while true; do
+            STATUS=$(curl -fsS -o /dev/null -w "%{http_code}" "${{ vars.SERVER_URL }}/health" || echo "000")
+            echo "Health check status: $STATUS ($(( DEADLINE - $(date +%s) ))s remaining)"
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Health check passed."
+              break
+            fi
+            if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+              echo "⚠️  Health check timed out after 4 minutes — last status: $STATUS"
+              break
+            fi
+            sleep $INTERVAL
+          done
 
       - name: Summary
         run: |
