@@ -1,12 +1,12 @@
 # Railway Deployment Guide
 
-This guide covers the full end-to-end setup: Railway service configuration, secret management, and GitHub Actions CI/CD pipelines across **dev**, **staging**, and **production** environments.
+This guide covers the full end-to-end setup: Railway service configuration, secret management, and GitHub Actions CI/CD pipelines across **ci**, **staging**, and **production** environments.
 
 ---
 
 ## Architecture Overview
 
-TaskFlow deploys as two Railway services within the same project:
+TaskFlow deploys as two Railway services within the same project and in a chosen environment (i.e. ci, staging or production):
 
 | Service | Dockerfile target | Port |
 |---|---|---|
@@ -19,7 +19,7 @@ The client is a static React app served by nginx, which proxies `/api` requests 
 
 | Workflow | Trigger | Target |
 |---|---|---|
-| `deploy-dev.yml` | Every merge to `main` | Railway `dev` environment |
+| `deploy-ci.yml` | Every merge to `main` | Railway `ci` environment |
 | `deploy-staging.yml` | Manual (`workflow_dispatch`) + optional SHA | Railway `staging` environment |
 | `deploy-production.yml` | Manual (`workflow_dispatch`) + reviewer approval | Railway `production` environment |
 
@@ -55,6 +55,7 @@ At runtime, the server decrypts the vault using a single key you provide:
 To get the key for an environment, run locally:
 
 ```bash
+npx dotenv-vault@latest keys ci
 npx dotenv-vault@latest keys staging
 npx dotenv-vault@latest keys production
 ```
@@ -65,8 +66,8 @@ npx dotenv-vault@latest keys production
 
 To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 
-1. Update the value in your local `.env.staging` or `.env.production` file
-2. Run `npx dotenv-vault@latest push staging` (or `production`) to re-encrypt and update `.env.vault`
+1. Update the value in your local `.env.ci` or `.env.staging` or `.env.production` file
+2. Run `npx dotenv-vault@latest push` (`ci` (`staging` or `production`) to re-encrypt and update `.env.vault`
 3. Commit and push `.env.vault` — the next Railway deploy will pick up the new values automatically via the same `DOTENV_KEY`
 
 ---
@@ -79,7 +80,7 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 |---|---|
 | Build Command | *(leave blank — uses Dockerfile)* |
 | Dockerfile Path | `packages/server/Dockerfile` |
-| Docker Build Target | `production` |
+| Docker Build Target Environment | `production` |
 | Root Directory | `/` (repo root) |
 
 ### Environment variables (Variables tab)
@@ -87,7 +88,7 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 | Variable | Value |
 |---|---|
 | `DOTENV_KEY` | Decryption key from `npx dotenv-vault@latest keys <env>` |
-| `CLIENT_ORIGIN` | The public Railway URL of the client service, e.g. `https://taskflow-client-production-xxxx.up.railway.app` |
+| `CLIENT_ORIGIN` | The public Railway URL of the client service, e.g. `https://taskflow-production-client.xxxx.up.railway.app` - You can rename this URL to something memorable. |
 | `PORT` | `4000` |
 
 > `DOTENV_KEY` unlocks the vault and injects all other secrets automatically (`MONGODB_URI`, `JWT_SECRET`, `NODE_ENV`). `CLIENT_ORIGIN` is set separately because it depends on the Railway-assigned client domain, which is not known at vault-build time. `PORT` must also be set explicitly — Railway's HTTP proxy reads `PORT` directly to route traffic to the container, and it cannot see values injected by dotenv-vault at boot time. Without it, Railway defaults to port 80 and the server (listening on 4000) returns 502.
@@ -106,16 +107,18 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 | Field | Value |
 |---|---|
 | Dockerfile Path | `packages/client/Dockerfile` |
-| Docker Build Target | `production` |
+| Docker Build Target Environment | `production` |
 | Root Directory | `/` (repo root) |
 
 ### Environment variables (Variables tab)
 
-![alt text](image.png)
+
+![private-networking](../images/private-networking.png)
+![server-private-url](../images/server-private-url.png)
 
 | Variable | Value |
 |---|---|
-| `BACKEND_URL` | `http://taskflow-server-replace-with-env-name.railway.internal:4000` |
+| `BACKEND_URL` | `http://taskflow.railway.internal:4000` |
 | `PORT` | `80` |
 
 > __Important:__ Use the private networking hostname (`taskflow.railway.internal`), not the public URL. This keeps traffic inside Railway's network and avoids latency and egress costs.
@@ -144,19 +147,19 @@ Verify by visiting the client's public URL and checking:
 
 ---
 
-## Step 6 — Multiple Environments (Staging vs Production)
+## Step 6 — Multiple Environments (CI, Staging and Production)
 
-Railway supports **Environments** within a single project. Use this to maintain separate staging and production deployments.
+Railway supports **Environments** within a single project. Use this to maintain separate ci, staging and production deployments.
 
-1. In your project, click **Environments** → **New Environment** → name it `staging` and `production`
+1. In your project, click **Environments** → **New Environment** → name it `ci`, `staging` and `production`.
 2. Each environment gets its own set of variable values and its own deployed instances of each service
-3. Set a different `DOTENV_KEY` per environment — dotenv-vault will automatically load the matching vault entry (`DOTENV_VAULT_STAGING` or `DOTENV_VAULT_PRODUCTION`), which sets `NODE_ENV` and all other env-specific values
+3. Set a different `DOTENV_KEY` per environment — dotenv-vault will automatically load the matching vault entry (`DOTENV_VAULT_CI`, `DOTENV_VAULT_STAGING` or `DOTENV_VAULT_PRODUCTION`), which sets `NODE_ENV` and all other env-specific values
 
-| Environment | `DOTENV_KEY` points to | Feature flags file | Flags enabled |
+| Environment | `DOTENV_KEY` points to | Feature flags file | Flags enabled(in default + in override file)|
 |---|---|---|---|
-| dev | `DOTENV_VAULT_DEVELOPMENT` | `flags.dev.json` | 7 of 9 |
-| staging | `DOTENV_VAULT_STAGING` | `flags.staging.json` | 4 of 9 |
-| production | `DOTENV_VAULT_PRODUCTION` | `flags.production.json` | 2 of 9 |
+| ci | `DOTENV_VAULT_CI` | `flags.ci.json` | (2 + 5) of 9 |
+| staging | `DOTENV_VAULT_STAGING` | `flags.staging.json` | (2 + 2) of 9 |
+| production | `DOTENV_VAULT_PRODUCTION` | `flags.production.json` | (2 + 0) of 9 |
 
 ---
 
@@ -166,9 +169,8 @@ Subsequent deploys after the first are handled automatically by GitHub Actions. 
 
 ### Step 7a — Create a Railway Token
 
-1. In the Railway dashboard → your project → **Settings** → **Tokens**
-2. Click **New Token** and copy the value
-3. You can use one token for all environments or create separate tokens per environment for tighter access control
+1. In the Railway dashboard → your project → **Settings** → **Tokens**.
+2. Select a environment from dropdown and Click **New Token**. Copy the value.
 
 ### Step 7b — Create GitHub Environments
 
@@ -176,13 +178,13 @@ Go to your GitHub repo → **Settings** → **Environments** and create three en
 
 | Environment | Protection rules |
 |---|---|
-| `dev` | None (auto-deploys on every merge to `main`) |
-| `staging` | Optional: restrict to specific branches |
+| `ci` | None (auto-deploys on every merge to `main`) |
+| `staging` | Pass a commit value or leave it empty to pick latest. |
 | `production` | **Required reviewers** — add at least one approver |
 
 ### Step 7c — Add Secrets per GitHub Environment
 
-For each environment (`dev`, `staging`, `production`), add the following under **Secrets**:
+For each environment (`ci`, `staging`, `production`), add the following under **Secrets**:
 
 | Secret | Value |
 |---|---|
@@ -194,8 +196,8 @@ For each environment, add the following under **Variables**:
 
 | Variable | Value | Purpose |
 |---|---|---|
-| `SERVER_URL` | `https://taskflow-server-<env>-xxxx.up.railway.app` | Health check after deploy |
-| `CLIENT_URL` | `https://taskflow-client-<env>-xxxx.up.railway.app` | PR comment and job summary link |
+| `SERVER_URL` | `https://taskflow-<env>-server-xxxx.up.railway.app` | Health check after deploy |
+| `CLIENT_URL` | `https://taskflow-<env>-client-xxxx.up.railway.app` | PR comment and job summary link |
 
 > Copy the exact public URLs from the Railway dashboard (the Railway-generated domains under each service's Networking settings).
 
@@ -203,7 +205,7 @@ For each environment, add the following under **Variables**:
 
 | Workflow | How to trigger | What it does |
 |---|---|---|
-| `deploy-dev.yml` | Automatic — every push to `main` | Deploys both services to Railway `dev` |
+| `deploy-ci.yml` | Automatic — every push to `main` | Deploys both services to Railway `ci` environment |
 | `deploy-staging.yml` | Manual — Actions tab → Run workflow (optionally provide a SHA) | Deploys to Railway `staging`, then comments on the associated PR |
 | `deploy-production.yml` | Manual — Actions tab → Run workflow → waits for reviewer approval | Deploys to Railway `production`, then creates a GitHub Release |
 
