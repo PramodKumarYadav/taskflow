@@ -10,6 +10,8 @@ on:
         required: false
         default: ''
 
+permissions:
+  pull-requests: write
 jobs:
   checkout-sha:
     name: Resolve SHA

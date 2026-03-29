@@ -20,6 +20,9 @@ on:
         required: false
         default: ''
 
+permissions:
+  pull-requests: write
+  contents: write # needed for create-release
 jobs:
   checkout-sha:
     name: Resolve SHA
