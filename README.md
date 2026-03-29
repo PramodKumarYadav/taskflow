@@ -5,9 +5,9 @@
 [![Deploy → Staging](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-staging.yml/badge.svg)](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-staging.yml)
 [![Deploy → Production](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-production.yml/badge.svg)](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-production.yml)
 
-<a href="https://taskflow-ci-client.up.railway.app/" target="_blank"><img src="https://img.shields.io/badge/🚀_CI-open-6366f1?style=flat-square" alt="CI environment"></a>
-<a href="https://taskflow-staging-client.up.railway.app/" target="_blank"><img src="https://img.shields.io/badge/🚀_Staging-open-6366f1?style=flat-square" alt="Staging environment"></a>
-<a href="https://taskflow-production-client.up.railway.app/" target="_blank"><img src="https://img.shields.io/badge/🚀_Production-open-6366f1?style=flat-square" alt="Production environment"></a>
+<a href="https://taskflow-ci-client.up.railway.app/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/%F0%9F%9A%80_CI-open-6366f1?style=flat-square" alt="CI environment"></a>
+<a href="https://taskflow-staging-client.up.railway.app/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/%F0%9F%9A%80_Staging-open-6366f1?style=flat-square" alt="Staging environment"></a>
+<a href="https://taskflow-production-client.up.railway.app/" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/%F0%9F%9A%80_Production-open-6366f1?style=flat-square" alt="Production environment"></a>
 
 A full-stack task management app built to demo **trunk-based development with feature toggles**.
 
@@ -62,11 +62,12 @@ npm install
 **2. Configure environment variables**
 
 ```bash
-cp packages/server/.env.example packages/server/.env
-# Edit packages/server/.env — set MONGODB_URI and JWT_SECRET at minimum
-
 cp packages/client/.env.example packages/client/.env
 # Usually no edits needed; defaults point to localhost:4000
+
+# Server secrets are managed via dotenv-vault.
+# Obtain the DOTENV_KEY for development from the team and set it in packages/server/.env:
+# DOTENV_KEY=dotenv://:key_xxxx@dotenv.org/vault/.env.vault?environment=development
 ```
 
 **3. Start MongoDB**
@@ -101,13 +102,13 @@ npm run dev:client
 | Client     | http://localhost:5173 |
 | Server API | http://localhost:4000 |
 
-The server starts with `NODE_ENV=local` by default — __all 9 feature flags are enabled__ in this mode.
+By default, the server runs with `NODE_ENV=development` — __all 9 feature flags are enabled__ in this mode. (Run `dev:ci` or `dev:docker` to test other environments.)
 
 ---
 
 ## Project Structure
 
-```ini
+```text
 /
 ├── packages/
 │   ├── client/          React + Vite + TypeScript
@@ -124,7 +125,7 @@ The server starts with `NODE_ENV=local` by default — __all 9 feature flags are
 
 ### Server (`packages/server/.env`)
 
-Copy `packages/server/.env.example` to `packages/server/.env`:
+Server secrets are managed via [dotenv-vault](https://www.dotenv.org/). Set the `DOTENV_KEY` for your environment in `packages/server/.env` — dotenv-vault will inject all other values at startup:
 
 | Variable        | Description                          | Example / Default                    |
 | --------------- | ------------------------------------ | ------------------------------------ |
