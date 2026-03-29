@@ -73,16 +73,18 @@ jobs:
           sleep 15
           DEADLINE=$(( $(date +%s) + 180 ))  # poll for up to 3 more minutes (4 min total)
           INTERVAL=5
+          BASE_URL="${{ vars.SERVER_URL }}"
+          BASE_URL="${BASE_URL%/}"  # strip any trailing slash
           while true; do
-            STATUS=$(curl -fsS -o /dev/null -w "%{http_code}" "${{ vars.SERVER_URL }}/health" || echo "000")
-            echo "Health check status: $STATUS ($(( DEADLINE - $(date +%s) ))s remaining)"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/health" || echo "000")
+            echo "Health check ${BASE_URL}/health → $STATUS ($(( DEADLINE - $(date +%s) ))s remaining)"
             if [ "$STATUS" = "200" ]; then
               echo "✅ Health check passed."
-              break
+              exit 0
             fi
             if [ "$(date +%s)" -ge "$DEADLINE" ]; then
-              echo "⚠️  Health check timed out after 4 minutes — last status: $STATUS"
-              break
+              echo "❌ Health check timed out after 4 minutes — last status: $STATUS"
+              exit 1
             fi
             sleep $INTERVAL
           done
