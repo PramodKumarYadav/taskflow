@@ -20,7 +20,7 @@ This project was built to demonstrate trunk-based development and feature toggle
 - **Trunk-based development showcase** — demonstrate how teams ship continuously to a single `main` branch without long-lived feature branches
 - **Feature toggles as the gate** — incomplete or risky features ship behind a flag that's off in production; turning a feature on is a JSON change, not a code deployment
 - **File-based flag config, no paid tooling** — flags are plain JSON files per environment; the system is built around a `Provider` interface so migrating to LaunchDarkly, Unleash, or any other tool requires changing one file
-- **Four environments** — `local` (all 9 flags on) → `dev` (7 flags) → `staging` (4 flags) → `production` (2 flags), each with progressively fewer experimental features
+- **Four environments** — `development` (all 9 flags on) → `ci` (7 flags) → `staging` (4 flags) → `production` (2 flags), each with progressively fewer experimental features
 - **Real-world CI/CD pipelines** — GitHub Actions with automated dev deploys on merge, manual staging promotion by SHA, and a production gate requiring environment approval before deploy
 - **React + Express + MongoDB** — a realistic task management app with enough modules (tasks, comments, labels, collaboration, dashboard analytics) to meaningfully demo multiple flags at once
 - **JWT authentication** — register/login with token-based auth protecting all task routes
@@ -102,7 +102,7 @@ npm run dev:client
 | Client     | http://localhost:5173 |
 | Server API | http://localhost:4000 |
 
-By default, the server runs with `NODE_ENV=development` — __all 9 feature flags are enabled__ in this mode. (Run `dev:ci` or `dev:docker` to test other environments.)
+By default, the server runs with `NODE_ENV=development` — __all 9 feature flags are enabled__ in this mode. (Run `dev:ci` to test with the ci flag set.)
 
 ---
 
@@ -129,7 +129,7 @@ Server secrets are managed via [dotenv-vault](https://www.dotenv.org/). Set the 
 
 | Variable        | Description                          | Example / Default                    |
 | --------------- | ------------------------------------ | ------------------------------------ |
-| `NODE_ENV`      | Controls which flag config is loaded | `local`                              |
+| `NODE_ENV`      | Controls which flag config is loaded | `development`                        |
 | `PORT`          | HTTP port                            | `4000`                               |
 | `MONGODB_URI`   | MongoDB connection string            | `mongodb://localhost:27017/taskflow` |
 | `JWT_SECRET`    | Long random string for signing JWTs  | _(generate — see below)_             |
@@ -156,8 +156,8 @@ Copy `packages/client/.env.example` to `packages/client/.env`:
 Flags are file-based JSON configs in `feature-flags/src/config/`. The active config is chosen by `NODE_ENV`.
 See [docs/FEATURE_FLAGS.md](docs/FEATURE_FLAGS.md) for the full guide, including how to swap to LaunchDarkly in one file change.
 
-| Flag                  | local | dev | staging | prod |
-| --------------------- | :---: | :-: | :-----: | :--: |
+| Flag                  | development | ci | staging | production |
+| --------------------- | :---------: | :-: | :-----: | :--------: |
 | `TASK_LABELS`         |  ✓   |  ✓  |    ✓    |  ✓  |
 | `NOTIFICATIONS`       |  ✓   |  ✓  |    ✓    |  ✓  |
 | `TASK_PRIORITY`       |  ✓   |  ✓  |    ✓    |  ✗  |
@@ -183,36 +183,32 @@ See [docs/TRUNK_BASED_DEV.md](docs/TRUNK_BASED_DEV.md) for the full trunk-based 
 
 | Workflow                | Trigger                       | What it does                                   |
 | ----------------------- | ----------------------------- | ---------------------------------------------- |
-| `ci.yml`                | Pull request to `main`        | Lint, type-check, test, build                  |
-| `deploy-dev.yml`        | Push to `main`                | Auto-deploys to dev environment                |
+| `pr.yml`                | Pull request to `main`        | Lint, type-check, test, build                  |
+| `deploy-ci.yml`         | Push to `main`                | Auto-deploys to ci environment                 |
 | `deploy-staging.yml`    | Manual (commit SHA input)     | Promotes a specific commit to staging          |
 | `deploy-production.yml` | Manual + environment approval | Promotes to prod and creates a GitHub Release  |
 
 ---
 
-## GitHub Secrets Required
+## GitHub Secrets & Variables Required
 
-Set in **Settings → Secrets and variables → Actions**:
+Set per environment in **Settings → Environments → `<env>` → Secrets**:
 
-```sh
-RENDER_DEV_SERVER_HOOK
-RENDER_DEV_CLIENT_HOOK
-RENDER_STAGING_SERVER_HOOK
-RENDER_STAGING_CLIENT_HOOK
-RENDER_PROD_SERVER_HOOK
-RENDER_PROD_CLIENT_HOOK
+| Secret | Description |
+| --- | --- |
+| `RAILWAY_TOKEN` | Railway project token — Settings → Tokens in Railway dashboard (scope to the environment) |
+| `DOTENV_KEY` | dotenv-vault key for the environment — run `npx dotenv-vault@latest keys <env>` |
 
-DEV_MONGODB_URI        DEV_JWT_SECRET
-STAGING_MONGODB_URI    STAGING_JWT_SECRET
-PROD_MONGODB_URI       PROD_JWT_SECRET
-```
+Set per environment in **Settings → Environments → `<env>` → Variables**:
 
-Set per-environment in **Settings → Environments → \<env\> → Variables**:
+| Variable | Example |
+| --- | --- |
+| `CLIENT_URL` | `https://taskflow-ci-client.up.railway.app` |
+| `SERVER_URL` | `https://taskflow-ci-server.up.railway.app` |
 
-```ini
-API_URL    e.g. https://taskflow-dev.onrender.com
-APP_URL    e.g. https://taskflow-dev-client.onrender.com
-```
+Repeat for each of the three environments: `ci`, `staging`, `production`.
+
+> All other secrets (`MONGODB_URI`, `JWT_SECRET`, etc.) are encrypted inside `.env.vault` and injected at runtime by dotenv-vault using `DOTENV_KEY` — no need to add them individually to GitHub.
 
 ---
 
