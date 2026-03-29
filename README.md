@@ -197,7 +197,8 @@ Set per environment in **Settings → Environments → `<env>` → Secrets**:
 | Secret | Description |
 | --- | --- |
 | `RAILWAY_TOKEN` | Railway project token — Settings → Tokens in Railway dashboard (scope to the environment) |
-| `DOTENV_KEY` | dotenv-vault key for the environment — run `npx dotenv-vault@latest keys <env>` |
+
+> __`DOTENV_KEY` is set in Railway, not GitHub.__ In the Railway dashboard → your server service → Variables, add `DOTENV_KEY` with the value from `npx dotenv-vault@latest keys <env>`. This is what injects `MONGODB_URI`, `JWT_SECRET`, and all other secrets at container startup.
 
 Set per environment in **Settings → Environments → `<env>` → Variables**:
 
@@ -208,7 +209,7 @@ Set per environment in **Settings → Environments → `<env>` → Variables**:
 
 Repeat for each of the three environments: `ci`, `staging`, `production`.
 
-> All other secrets (`MONGODB_URI`, `JWT_SECRET`, etc.) are encrypted inside `.env.vault` and injected at runtime by dotenv-vault using `DOTENV_KEY` — no need to add them individually to GitHub.
+> All other secrets (`MONGODB_URI`, `JWT_SECRET`, etc.) are encrypted inside `.env.vault` and injected at runtime by dotenv-vault — no need to add them to GitHub. The only secret GitHub needs is `RAILWAY_TOKEN` to trigger deploys.
 
 ---
 
