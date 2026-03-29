@@ -67,7 +67,13 @@ npx dotenv-vault@latest keys production
 To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 
 1. Update the value in your local `.env.ci` or `.env.staging` or `.env.production` file
-2. Run `npx dotenv-vault@latest push` (`ci` (`staging` or `production`) to re-encrypt and update `.env.vault`
+2. Run dotenv-vault push for the matching environment to re-encrypt and update `.env.vault`:
+
+   ```bash
+   npx dotenv-vault@latest push ci
+   npx dotenv-vault@latest push staging
+   npx dotenv-vault@latest push production
+   ```
 3. Commit and push `.env.vault` — the next Railway deploy will pick up the new values automatically via the same `DOTENV_KEY`
 
 ---
@@ -155,7 +161,7 @@ Railway supports **Environments** within a single project. Use this to maintain 
 2. Each environment gets its own set of variable values and its own deployed instances of each service
 3. Set a different `DOTENV_KEY` per environment — dotenv-vault will automatically load the matching vault entry (`DOTENV_VAULT_CI`, `DOTENV_VAULT_STAGING` or `DOTENV_VAULT_PRODUCTION`), which sets `NODE_ENV` and all other env-specific values
 
-| Environment | `DOTENV_KEY` points to | Feature flags file | Flags enabled(in default + in override file)|
+| Environment | `DOTENV_KEY` points to | Feature flags file | Flags enabled (default + overrides) |
 |---|---|---|---|
 | ci | `DOTENV_VAULT_CI` | `flags.ci.json` | (2 + 5) of 9 |
 | staging | `DOTENV_VAULT_STAGING` | `flags.staging.json` | (2 + 2) of 9 |
@@ -170,7 +176,7 @@ Subsequent deploys after the first are handled automatically by GitHub Actions. 
 ### Step 7a — Create a Railway Token
 
 1. In the Railway dashboard → your project → **Settings** → **Tokens**.
-2. Select a environment from dropdown and Click **New Token**. Copy the value.
+2. Select an environment from the dropdown, then click **New Token**. Copy the value.
 
 ### Step 7b — Create GitHub Environments
 
@@ -179,7 +185,7 @@ Go to your GitHub repo → **Settings** → **Environments** and create three en
 | Environment | Protection rules |
 |---|---|
 | `ci` | None (auto-deploys on every merge to `main`) |
-| `staging` | Pass a commit value or leave it empty to pick latest. |
+| `staging` | Optional protections — e.g. required reviewers and/or branch restrictions before deploy |
 | `production` | **Required reviewers** — add at least one approver |
 
 ### Step 7c — Add Secrets per GitHub Environment
