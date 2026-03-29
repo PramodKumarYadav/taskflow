@@ -1,7 +1,13 @@
 # TaskFlow
 
-[![Staging](https://img.shields.io/badge/staging-live-blue?style=flat-square)](https://taskflow-client-staging-staging.up.railway.app/)
-[![Production](https://img.shields.io/badge/production-live-brightgreen?style=flat-square)](https://taskflow-client-production-8f52.up.railway.app/)
+[![PR Validation](https://github.com/PramodKumarYadav/taskflow/actions/workflows/pr.yml/badge.svg)](https://github.com/PramodKumarYadav/taskflow/actions/workflows/pr.yml)
+[![Deploy → ci](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-ci.yml/badge.svg)](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-ci.yml)
+[![Deploy → Staging](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-staging.yml/badge.svg)](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-staging.yml)
+[![Deploy → Production](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-production.yml/badge.svg)](https://github.com/PramodKumarYadav/taskflow/actions/workflows/deploy-production.yml)
+
+<a href="https://taskflow-development-520e.up.railway.app/" target="_blank"><img src="https://img.shields.io/badge/🚀_CI-open-6366f1?style=flat-square" alt="CI environment"></a>
+<a href="https://taskflow-client-staging-staging.up.railway.app/" target="_blank"><img src="https://img.shields.io/badge/🚀_Staging-open-6366f1?style=flat-square" alt="Staging environment"></a>
+<a href="https://taskflow-client-production-8f52.up.railway.app/" target="_blank"><img src="https://img.shields.io/badge/🚀_Production-open-6366f1?style=flat-square" alt="Production environment"></a>
 
 A full-stack task management app built to demo **trunk-based development with feature toggles**.
 
@@ -95,13 +101,13 @@ npm run dev:client
 | Client     | http://localhost:5173 |
 | Server API | http://localhost:4000 |
 
-The server starts with `NODE_ENV=local` by default — **all 9 feature flags are enabled** in this mode.
+The server starts with `NODE_ENV=local` by default — __all 9 feature flags are enabled__ in this mode.
 
 ---
 
 ## Project Structure
 
-```
+```ini
 /
 ├── packages/
 │   ├── client/          React + Vite + TypeScript
@@ -125,7 +131,7 @@ Copy `packages/server/.env.example` to `packages/server/.env`:
 | `NODE_ENV`      | Controls which flag config is loaded | `local`                              |
 | `PORT`          | HTTP port                            | `4000`                               |
 | `MONGODB_URI`   | MongoDB connection string            | `mongodb://localhost:27017/taskflow` |
-| `JWT_SECRET`    | Long random string for signing JWTs  | *(generate — see below)*             |
+| `JWT_SECRET`    | Long random string for signing JWTs  | _(generate — see below)_             |
 | `CLIENT_ORIGIN` | CORS allowed origin                  | `http://localhost:5173`              |
 
 Generate a JWT secret:
@@ -187,7 +193,7 @@ See [docs/TRUNK_BASED_DEV.md](docs/TRUNK_BASED_DEV.md) for the full trunk-based 
 
 Set in **Settings → Secrets and variables → Actions**:
 
-```
+```sh
 RENDER_DEV_SERVER_HOOK
 RENDER_DEV_CLIENT_HOOK
 RENDER_STAGING_SERVER_HOOK
@@ -202,7 +208,7 @@ PROD_MONGODB_URI       PROD_JWT_SECRET
 
 Set per-environment in **Settings → Environments → \<env\> → Variables**:
 
-```
+```ini
 API_URL    e.g. https://taskflow-dev.onrender.com
 APP_URL    e.g. https://taskflow-dev-client.onrender.com
 ```
