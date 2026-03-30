@@ -7,9 +7,11 @@
     "feature-flags"
   ],
   "scripts": {
-    "dev": "docker-compose up --build",
-    "dev:local": "npm run build --workspace=feature-flags && concurrently --names 'server,client' --prefix-colors 'blue,green' 'npm run dev --workspace=packages/server' 'npm run dev --workspace=packages/client'",
-    "dev:ci": "NODE_ENV=ci npm run build --workspace=feature-flags && NODE_ENV=ci concurrently --names 'server,client' --prefix-colors 'blue,green' 'npm run dev --workspace=packages/server' 'npm run dev --workspace=packages/client'",
+    "dev:docker": "docker-compose up --build",
+    "dev": "cross-env NODE_ENV=development npm run build --workspace=feature-flags && cross-env NODE_ENV=development concurrently --names 'server,client' --prefix-colors 'blue,green' 'npm run dev --workspace=packages/server' 'npm run dev --workspace=packages/client'",
+    "dev:ci": "cross-env NODE_ENV=ci npm run build --workspace=feature-flags && cross-env NODE_ENV=ci concurrently --names 'server,client' --prefix-colors 'blue,green' 'npm run dev --workspace=packages/server' 'npm run dev --workspace=packages/client'",
+    "dev:staging": "cross-env NODE_ENV=staging npm run build --workspace=feature-flags && cross-env NODE_ENV=staging concurrently --names 'server,client' --prefix-colors 'blue,green' 'npm run dev --workspace=packages/server' 'npm run dev --workspace=packages/client'",
+    "dev:production": "cross-env NODE_ENV=production npm run build --workspace=feature-flags && cross-env NODE_ENV=production concurrently --names 'server,client' --prefix-colors 'blue,green' 'npm run dev --workspace=packages/server' 'npm run dev --workspace=packages/client'",
     "dev:server": "npm run build --workspace=feature-flags && npm run dev --workspace=packages/server",
     "dev:client": "npm run dev --workspace=packages/client",
     "lint": "eslint 'packages/*/src/**/*.{ts,tsx}' 'feature-flags/src/**/*.ts'",
@@ -21,6 +23,7 @@
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.0",
     "eslint-plugin-react-hooks": "^4.6.0",
