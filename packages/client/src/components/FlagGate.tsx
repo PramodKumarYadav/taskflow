@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
+import { useFeatureFlagContext } from '../contexts/FeatureFlagContext';
 import { FlagName } from '../types/flags';
 
 interface Props {
@@ -14,6 +15,8 @@ interface Props {
  */
 export function FlagGate({ flag, children, fallback }: Props) {
   const enabled = useFeatureFlag(flag);
+  const { isLoading } = useFeatureFlagContext();
+  if (isLoading) return null;
   if (!enabled) {
     return fallback ? <>{fallback}</> : <Navigate to="/tasks" replace />;
   }
