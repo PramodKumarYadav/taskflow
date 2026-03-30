@@ -11,6 +11,7 @@ EXPOSE 5173
 CMD ["npm", "run", "dev", "--workspace=packages/client", "--", "--host"]
 
 FROM base AS builder
+ARG VITE_APP_ENV
 RUN npm install
 COPY packages/client ./packages/client
 RUN npm run build --workspace=packages/client

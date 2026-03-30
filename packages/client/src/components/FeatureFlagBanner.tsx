@@ -10,8 +10,9 @@ export function FeatureFlagBanner() {
     .filter(([, v]) => v)
     .map(([k]) => k);
 
-  // Hide in production builds
-  if (import.meta.env.PROD) return null;
+  // Show in local dev (vite serve) or in named non-production Railway environments (ci/staging).
+  // Hide in production builds where VITE_APP_ENV is unset or explicitly 'production'.
+  if (import.meta.env.PROD && (!import.meta.env.VITE_APP_ENV || import.meta.env.VITE_APP_ENV === 'production')) return null;
 
   return (
     <div className="flag-banner">
