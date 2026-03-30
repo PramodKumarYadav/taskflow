@@ -233,3 +233,21 @@ Repeat for each of the three environments: `ci`, `staging`, `production`.
 - [Feature Flags guide](docs/FEATURE_FLAGS.md) — flag matrix, provider interface, migration to paid tools
 - [Trunk-Based Development guide](docs/TRUNK_BASED_DEV.md) — branch strategy, pipeline walkthrough
 - [Demo Script](docs/DEMO_SCRIPT.md) — step-by-step walkthrough for presenting to your team
+
+## Troubleshooting
+
+### Port already in use
+
+If you see `EADDRINUSE` errors on startup, a previous `ts-node-dev` or Vite process is still running.
+`ts-node-dev` spawns two processes (watcher + server child), so killing by port alone may miss the parent.
+Kill all processes on both ports, then re-run:
+
+```bash
+# Kill by port — catches the child process holding the socket
+lsof -ti :4000 | xargs kill -9 2>/dev/null; lsof -ti :5173 | xargs kill -9 2>/dev/null
+
+# If port 4000 is still in use, kill the entire ts-node-dev process tree too
+pkill -9 -f ts-node-dev 2>/dev/null; true
+```
+
+Then re-run your dev command.
