@@ -10,6 +10,7 @@ interface AuthUser {
 interface AuthContextValue {
   user: AuthUser | null;
   token: string | null;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem('tf_token');
@@ -28,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(stored);
       setUser(JSON.parse(storedUser));
     }
+    setIsLoading(false);
   }, []);
 
   const persist = (tok: string, u: AuthUser) => {
@@ -55,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
