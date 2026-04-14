@@ -69,11 +69,12 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 1. Update the value in your local `.env.ci` or `.env.staging` or `.env.production` file
 2. Run dotenv-vault push for the matching environment to re-encrypt and update `.env.vault`:
 
-   ```bash
-   npx dotenv-vault@latest push ci
-   npx dotenv-vault@latest push staging
-   npx dotenv-vault@latest push production
-   ```
+```bash
+npx dotenv-vault@latest push ci
+npx dotenv-vault@latest push staging
+npx dotenv-vault@latest push production
+```
+
 3. Commit and push `.env.vault` — the next Railway deploy will pick up the new values automatically via the same `DOTENV_KEY`
 
 ---
@@ -117,7 +118,6 @@ To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 | Root Directory | `/` (repo root) |
 
 ### Environment variables (Variables tab)
-
 
 ![private-networking](../images/private-networking.png)
 ![server-private-url](../images/server-private-url.png)
