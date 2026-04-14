@@ -168,6 +168,27 @@ See [docs/FEATURE_FLAGS.md](docs/FEATURE_FLAGS.md) for the full guide, including
 | `DARK_MODE`           |  ✓   |  ✗  |    ✗    |  ✗  |
 | `AI_SUGGESTIONS`      |  ✓   |  ✗  |    ✗    |  ✗  |
 
+### Use Cases & Implementation
+
+Feature toggles can guard changes at every layer of the stack. The table below shows a distinct category of change, the flag that demonstrates it in this codebase, and the exact files involved.
+
+| Use Case | Category | Flag | Key files |
+| --- | --- | --- | --- |
+| A completely new page is not ready for users yet — hide the route, the nav link, and the server endpoint behind a single flag | **New page** | `DASHBOARD_ANALYTICS` | [App.tsx](packages/client/src/App.tsx) (`<FlagGate>` wraps the `/dashboard` route) · [Navbar.tsx](packages/client/src/components/Navbar.tsx) (nav link) · [DashboardPage.tsx](packages/client/src/pages/DashboardPage.tsx) · [dashboard.ts](packages/server/src/routes/dashboard.ts) (`featureGate` middleware) |
+| A new section is added inside a page that already ships to production — only the section is toggled, not the whole page | **New UI section within existing page** | `TASK_COMMENTS` | [TaskCard.tsx](packages/client/src/components/TaskCard.tsx) (`useFeatureFlag` hides comment section) · [CommentSection.tsx](packages/client/src/components/CommentSection.tsx) |
+| A new input is added to an existing form, backed by a schema field that is deployed but not yet surfaced | **New field on existing form & model** | `TASK_PRIORITY` | [TaskForm.tsx](packages/client/src/components/TaskForm.tsx) (priority selector) · [TaskCard.tsx](packages/client/src/components/TaskCard.tsx) (priority badge) · [Task.ts](packages/server/src/models/Task.ts) (`priority` enum field in schema) |
+| A persistent widget (button, toggle, bell) is added to the global app shell visible on every page | **New global UI element** | `DARK_MODE` · `NOTIFICATIONS` | [Navbar.tsx](packages/client/src/components/Navbar.tsx) (`useFeatureFlag` for both) · [DarkModeToggle.tsx](packages/client/src/components/DarkModeToggle.tsx) · [NotificationBell.tsx](packages/client/src/components/NotificationBell.tsx) |
+| A new server endpoint is added but the feature is not ready — gate it at the API layer so even a direct HTTP call is rejected | **New backend API route** | `CSV_EXPORT` | [tasks.ts](packages/server/src/routes/tasks.ts) (`GET /api/tasks/export/csv` guarded by `featureGate`) · [featureGate.ts](packages/server/src/middleware/featureGate.ts) (the middleware) · [TasksPage.tsx](packages/client/src/pages/TasksPage.tsx) (export button hidden on client) |
+| A new Mongoose model and its collection are introduced — documents should only be written while the flag is on | **New database collection** | `TASK_COMMENTS` | [Comment.ts](packages/server/src/models/Comment.ts) (new schema/collection) · [tasks.ts](packages/server/src/routes/tasks.ts) (comment routes guarded by `featureGate`) |
+| A feature touches every layer — a new schema field, new server routes, and new UI components all ship together | **Full-stack cross-cutting feature** | `COLLABORATION` | [Task.ts](packages/server/src/models/Task.ts) (`sharedWith[]` field) · [collaboration.ts](packages/server/src/routes/collaboration.ts) (routes + `featureGate`) · [CollaborationPanel.tsx](packages/client/src/components/CollaborationPanel.tsx) · [TaskCard.tsx](packages/client/src/components/TaskCard.tsx) (share button) |
+| A speculative or experimental feature that may be cut entirely — ships in the codebase without risk because it is off everywhere except development | **Experimental / AI feature** | `AI_SUGGESTIONS` | [TaskForm.tsx](packages/client/src/components/TaskForm.tsx) (`useFeatureFlag` gates the "Suggest" button and the AI logic) |
+| A new field is added to an existing document — the flag can be safely toggled off in production at any time without data loss or errors because the field is optional with a default | **Backward-compatible schema change (additive)** | `TASK_PRIORITY` · `COLLABORATION` | [Task.ts](packages/server/src/models/Task.ts) — `priority` has `default: 'medium'` so pre-existing documents read back safely; `sharedWith` is an optional array that defaults to `[]`. No migration script needed. Toggling the flag off hides the UI and stops writes, but existing field data is untouched and safe to re-enable later. |
+
+> **Pattern note — additive vs. breaking schema changes:**
+> All schema changes in this codebase follow the **additive-only** rule: new fields are always optional with a safe default. This is what makes the flag safely toggleable in both directions. If you need to add a `required` field, or change an existing field's type, you must **migrate first**: deploy a migration that backfills all existing documents with a safe value, confirm it has run on production, and only then turn the flag on. The flag gates the application code; the migration must make the data safe independently.
+
+The shared flag contract (type definitions, `Provider` interface) lives in [feature-flags/src/types.ts](feature-flags/src/types.ts). Default values and metadata for all flags are in [feature-flags/src/config/flags.default.json](feature-flags/src/config/flags.default.json), with per-environment overrides in the sibling `flags.<env>.json` files.
+
 To simulate a different environment locally, edit `NODE_ENV` in `packages/server/.env`:
 
 ```bash
