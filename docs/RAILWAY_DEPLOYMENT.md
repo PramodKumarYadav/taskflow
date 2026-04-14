@@ -67,7 +67,6 @@ npx dotenv-vault@latest keys production
 To rotate or update any secret (e.g. `MONGODB_URI` or `JWT_SECRET`):
 
 1. Update the value in your local `.env.ci` or `.env.staging` or `.env.production` file
-
 2. Run dotenv-vault push for the matching environment to re-encrypt and update `.env.vault`:
 
 ```bash
