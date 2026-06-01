@@ -149,7 +149,7 @@ jobs:
               commit_sha: sha,
             });
 
-            // Ensure the environment label exists before applying it.
+            // Ensure the environment label exists with the correct color before applying it.
             // Colors: ci=blue, dev=green, staging=yellow, production=red.
             const labelColors = { ci: '0075ca', dev: '0e8a16', staging: 'e4e669', production: 'd93f0b' };
             const labelName = `deployed: ${env}`;
@@ -163,8 +163,18 @@ jobs:
                 description: `Deployed to ${env}`,
               });
             } catch (e) {
-              // 422 Unprocessable Entity means the label already exists — safe to ignore.
-              if (e.status !== 422) throw e;
+              if (e.status === 422) {
+                // Label already exists — update it to ensure color and description stay in sync.
+                await github.rest.issues.updateLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: labelName,
+                  color: labelColor,
+                  description: `Deployed to ${env}`,
+                });
+              } else {
+                throw e;
+              }
             }
 
             for (const pr of prs.data) {
