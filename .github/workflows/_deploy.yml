@@ -124,6 +124,24 @@ jobs:
               commit_sha: sha,
             });
 
+            // Ensure the environment label exists before applying it.
+            // Colors: production=red, staging=yellow, dev=green.
+            const labelColors = { production: 'd93f0b', staging: 'e4e669', dev: '0e8a16' };
+            const labelName = `deployed: ${env}`;
+            const labelColor = labelColors[env] ?? 'ededed';
+            try {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: labelName,
+                color: labelColor,
+                description: `Deployed to ${env}`,
+              });
+            } catch (e) {
+              // 422 Unprocessable Entity means the label already exists — safe to ignore.
+              if (e.status !== 422) throw e;
+            }
+
             for (const pr of prs.data) {
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
@@ -131,4 +149,15 @@ jobs:
                 issue_number: pr.number,
                 body,
               });
+
+              // Only label the PR on a successful deploy so the label reliably
+              // indicates "this PR reached <env>", not just "a deploy was attempted".
+              if (status === 'success') {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: [labelName],
+                });
+              }
             }
