@@ -150,8 +150,8 @@ jobs:
             });
 
             // Ensure the environment label exists with the correct color before applying it.
-            // Colors: ci=blue, dev=green, staging=yellow, production=red.
-            const labelColors = { ci: '0075ca', dev: '0e8a16', staging: 'e4e669', production: 'd93f0b' };
+            // Colors: ci=blue, dev=yellow, staging=green, production=red.
+            const labelColors = { ci: '0075ca', dev: 'e4e669', staging: '0e8a16', production: 'd93f0b' };
             const labelName = `deployed: ${env}`;
             const labelColor = labelColors[env] ?? 'ededed';
             try {
