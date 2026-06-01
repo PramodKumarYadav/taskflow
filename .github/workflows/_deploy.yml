@@ -102,13 +102,14 @@ jobs:
           echo "| **Client URL** | ${{ vars.CLIENT_URL }} |" >> $GITHUB_STEP_SUMMARY
 
   notify-pr:
-    name: Comment on PR
+    name: Notify PR
     needs: deploy
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     if: ${{ always() }}
     steps:
-      - uses: actions/github-script@v7
+      - name: Comment deploy status on PR
+        uses: actions/github-script@v7
         with:
           script: |
             // inputs.sha is set for staging/production (manual); fall back to context.sha for ci (push)
@@ -124,9 +125,33 @@ jobs:
               commit_sha: sha,
             });
 
+            for (const pr of prs.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body,
+              });
+            }
+
+      - name: Label PR with deployed environment
+        uses: actions/github-script@v7
+        if: ${{ needs.deploy.result == 'success' }}
+        with:
+          script: |
+            // inputs.sha is set for staging/production (manual); fall back to context.sha for ci (push)
+            const sha = '${{ inputs.sha }}' || context.sha;
+            const env = '${{ inputs.environment }}';
+
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: sha,
+            });
+
             // Ensure the environment label exists before applying it.
-            // Colors: production=red, staging=yellow, dev=green.
-            const labelColors = { production: 'd93f0b', staging: 'e4e669', dev: '0e8a16' };
+            // Colors: ci=blue, dev=green, staging=yellow, production=red.
+            const labelColors = { ci: '0075ca', dev: '0e8a16', staging: 'e4e669', production: 'd93f0b' };
             const labelName = `deployed: ${env}`;
             const labelColor = labelColors[env] ?? 'ededed';
             try {
@@ -143,21 +168,10 @@ jobs:
             }
 
             for (const pr of prs.data) {
-              await github.rest.issues.createComment({
+              await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body,
+                labels: [labelName],
               });
-
-              // Only label the PR on a successful deploy so the label reliably
-              // indicates "this PR reached <env>", not just "a deploy was attempted".
-              if (status === 'success') {
-                await github.rest.issues.addLabels({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: pr.number,
-                  labels: [labelName],
-                });
-              }
             }
